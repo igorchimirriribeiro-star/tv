@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Meu Menu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --bg: #17122b;
+  --bg-low: #2a1a45;
+  --panel: #241c42;
+  --text: #f5f1ff;
+  --muted: #a79ecf;
+  --accent: #ffb84d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 55%, var(--bg-low) 100%);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+.stage {
+  position: absolute;
+  left: 5vw;
+  right: 5vw;
+  top: 6vh;
+  bottom: 6vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.time {
+  font-size: 13vw;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.date {
+  margin-top: 1.5vh;
+  font-size: 2.2vw;
+  color: var(--muted);
+}
+.row { display: flex; }
+.tile {
+  width: 20vw;
+  height: 24vh;
+  margin-right: 2vw;
+  padding: 2.2vh 1.6vw;
+  background: var(--panel);
+  border-left: 0.5vw solid var(--tile-color);
+  border-radius: 0.6vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+.tile .glyph {
+  font-size: 6vw;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--tile-color);
+}
+.tile .name { font-size: 2.2vw; font-weight: 700; }
+.tile.on {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 0.3vw var(--accent);
+}
+.hint {
+  margin-top: 3vh;
+  font-size: 1.5vw;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div>
+    <div class="time" id="time">00:00</div>
+    <div class="date" id="date"></div>
+  </div>
+  <div>
+    <div class="row" id="row"></div>
+    <div class="hint">Use as setas e aperte OK para abrir</div>
+  </div>
+</div>
+
+<script>
+/* ===== Edite aqui os seus atalhos ===== */
+var SHORTCUTS = [
+  { name: 'YouTube', url: 'https://www.youtube.com/tv', color: '#ff5a5a' },
+  { name: 'Kick',    url: 'https://kick.com',           color: '#53fc18' },
+  { name: 'Twitch',  url: 'https://www.twitch.tv',      color: '#a970ff' }
+];
+/* ====================================== */
+
+var DAYS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+var MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function updateClock() {
+  var d = new Date();
+  document.getElementById('time').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  document.getElementById('date').textContent =
+    DAYS[d.getDay()] + ', ' + d.getDate() + ' de ' + MONTHS[d.getMonth()];
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+var row = document.getElementById('row');
+var tiles = [];
+var current = 0;
+
+for (var i = 0; i < SHORTCUTS.length; i++) {
+  var s = SHORTCUTS[i];
+  var tile = document.createElement('div');
+  tile.className = 'tile';
+  tile.style.setProperty('--tile-color', s.color);
+
+  var glyph = document.createElement('div');
+  glyph.className = 'glyph';
+  glyph.textContent = s.name.charAt(0);
+
+  var name = document.createElement('div');
+  name.className = 'name';
+  name.textContent = s.name;
+
+  tile.appendChild(glyph);
+  tile.appendChild(name);
+  row.appendChild(tile);
+  tiles.push(tile);
+}
+
+function select(index) {
+  if (index < 0 || index >= tiles.length) { return; }
+  tiles[current].className = 'tile';
+  current = index;
+  tiles[current].className = 'tile on';
+}
+select(0);
+
+document.addEventListener('keydown', function (e) {
+  var k = e.keyCode;
+  if (k === 37) { select(current - 1); e.preventDefault(); }
+  else if (k === 39) { select(current + 1); e.preventDefault(); }
+  else if (k === 13) { window.location.href = SHORTCUTS[current].url; e.preventDefault(); }
+});
+</script>
+</body>
+</html>
