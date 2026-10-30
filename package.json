@@ -1,6 +1,6 @@
 {
   "name": "meu-menu-tv",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Menu personalizado para TV Samsung via TizenBrew: relogio, data e atalhos.",
   "packageType": "app",
   "appName": "Meu Menu",
