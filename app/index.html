@@ -6,12 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root {
-  --bg: #17122b;
-  --bg-low: #2a1a45;
-  --panel: #241c42;
-  --text: #f5f1ff;
-  --muted: #a79ecf;
-  --accent: #ffb84d;
+  --bg: #ffffff;
+  --panel: #f2f2f7;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --accent: #0071e3;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -19,36 +18,51 @@ html, body {
   height: 100%;
   overflow: hidden;
   color: var(--text);
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 55%, var(--bg-low) 100%);
+  background: var(--bg);
   font-family: "Trebuchet MS", Arial, sans-serif;
 }
 .stage {
   position: absolute;
   left: 5vw;
   right: 5vw;
-  top: 6vh;
-  bottom: 6vh;
+  top: 5vh;
+  bottom: 5vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 .time {
-  font-size: 13vw;
+  font-size: 11vw;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 .date {
-  margin-top: 1.5vh;
-  font-size: 2.2vw;
+  margin-top: 1vh;
+  font-size: 2vw;
   color: var(--muted);
 }
-.row { display: flex; }
-.tile {
+.top { display: flex; justify-content: space-between; align-items: flex-start; }
+.clockrow { display: flex; align-items: center; }
+.greeting { margin-left: 3vw; font-size: 3.2vw; font-weight: 700; }
+.weather {
   width: 20vw;
-  height: 24vh;
-  margin-right: 2vw;
-  padding: 2.2vh 1.6vw;
+  padding: 2.2vh 1.4vw;
+  background: var(--panel);
+  border-radius: 0.6vw;
+}
+.weather .city { font-size: 1.4vw; color: var(--muted); }
+.weather .temp { margin-top: 0.8vh; font-size: 4.6vw; font-weight: 700; line-height: 1; }
+.weather .cond { margin-top: 0.8vh; font-size: 1.7vw; font-weight: 700; }
+.weather .range { margin-top: 0.8vh; font-size: 1.4vw; color: var(--muted); }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 16vw);
+  grid-gap: 3vh 2.5vw;
+}
+.tile {
+  height: 19vh;
+  padding: 2vh 1.2vw;
   background: var(--panel);
   border-left: 0.5vw solid var(--tile-color);
   border-radius: 0.6vw;
@@ -58,19 +72,19 @@ html, body {
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
 }
 .tile .glyph {
-  font-size: 6vw;
+  font-size: 4vw;
   font-weight: 700;
   line-height: 1;
   color: var(--tile-color);
 }
-.tile .name { font-size: 2.2vw; font-weight: 700; }
+.tile .name { font-size: 1.8vw; font-weight: 700; }
 .tile.on {
-  transform: scale(1.08);
-  box-shadow: 0 0 0 0.3vw var(--accent);
+  transform: scale(1.06);
+  box-shadow: 0 0 0 0.25vw var(--accent);
 }
 .hint {
-  margin-top: 3vh;
-  font-size: 1.5vw;
+  margin-top: 2.5vh;
+  font-size: 1.4vw;
   color: var(--muted);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -80,40 +94,118 @@ html, body {
 </head>
 <body>
 <div class="stage">
-  <div>
-    <div class="time" id="time">00:00</div>
-    <div class="date" id="date"></div>
+  <div class="top">
+    <div>
+      <div class="clockrow">
+        <div class="time" id="time">00:00</div>
+        <div class="greeting" id="greeting"></div>
+      </div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="weather">
+      <div class="city">São Carlos, SP</div>
+      <div class="temp" id="temp">--°</div>
+      <div class="cond" id="cond">Carregando clima...</div>
+      <div class="range" id="range"></div>
+    </div>
   </div>
   <div>
-    <div class="row" id="row"></div>
-    <div class="hint">Use as setas e aperte OK para abrir</div>
+    <div class="grid" id="grid"></div>
+    <div class="hint" id="hint">Use as setas e aperte OK para abrir</div>
   </div>
 </div>
 
 <script>
-/* ===== Edite aqui os seus atalhos ===== */
+/* ===== Edite aqui os seus atalhos =====
+   ids: IDs do app nativo da TV (tenta na ordem). Vazio = abre so o site.
+   url: site usado quando o app nativo nao abre (pode ficar vazio). */
 var SHORTCUTS = [
-  { name: 'YouTube', url: 'https://www.youtube.com/tv', color: '#ff5a5a' },
-  { name: 'Kick',    url: 'https://kick.com',           color: '#53fc18' },
-  { name: 'Twitch',  url: 'https://www.twitch.tv',      color: '#a970ff' }
+  { name: 'YouTube',    glyph: 'YT',    color: '#e0222a', ids: ['111299001912'], url: 'https://www.youtube.com/tv' },
+  { name: 'Netflix',    glyph: 'N',     color: '#b20710', ids: ['11101200001', 'org.tizen.netflix-app'], url: 'https://www.netflix.com' },
+  { name: 'Disney+',    glyph: 'D+',    color: '#0f2a8a', ids: [], url: 'https://www.disneyplus.com' },
+  { name: 'Prime Video', glyph: 'P',    color: '#0083b0', ids: ['3201910019365', '3201512006785'], url: 'https://www.primevideo.com' },
+  { name: 'Globoplay',  glyph: 'G',     color: '#e8590c', ids: [], url: 'https://globoplay.globo.com' },
+  { name: 'Paramount+', glyph: 'P+',    color: '#0064ff', ids: [], url: 'https://www.paramountplus.com' },
+  { name: 'HBO Max',    glyph: 'HBO',   color: '#5a2ca0', ids: [], url: 'https://www.hbomax.com' },
+  { name: 'Apple TV',   glyph: 'tv',    color: '#1d1d1f', ids: [], url: 'https://tv.apple.com' }
 ];
 /* ====================================== */
 
+var COLS = 5;
 var DAYS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
 var MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+var DEFAULT_HINT = 'Use as setas e aperte OK para abrir';
 
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
 function updateClock() {
   var d = new Date();
   document.getElementById('time').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  var h = d.getHours();
+  document.getElementById('greeting').textContent =
+    (h >= 5 && h < 12) ? 'Bom dia' : ((h >= 12 && h < 18) ? 'Boa tarde' : 'Boa noite');
   document.getElementById('date').textContent =
     DAYS[d.getDay()] + ', ' + d.getDate() + ' de ' + MONTHS[d.getMonth()];
 }
 updateClock();
 setInterval(updateClock, 1000);
 
-var row = document.getElementById('row');
+/* Clima de São Carlos, SP (Open-Meteo, sem chave de acesso) */
+var WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=-22.01&longitude=-47.89' +
+  '&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo';
+
+function describe(code) {
+  if (code === 0) { return 'Céu limpo'; }
+  if (code === 1) { return 'Quase sem nuvens'; }
+  if (code === 2) { return 'Parcialmente nublado'; }
+  if (code === 3) { return 'Nublado'; }
+  if (code === 45 || code === 48) { return 'Neblina'; }
+  if (code >= 51 && code <= 57) { return 'Garoa'; }
+  if (code === 61 || code === 66) { return 'Chuva fraca'; }
+  if (code === 63 || code === 67) { return 'Chuva'; }
+  if (code === 65) { return 'Chuva forte'; }
+  if (code >= 80 && code <= 82) { return 'Pancadas de chuva'; }
+  if (code === 95) { return 'Trovoada'; }
+  if (code === 96 || code === 99) { return 'Trovoada com granizo'; }
+  if (code >= 71 && code <= 86) { return 'Neve'; }
+  return 'Clima indefinido';
+}
+
+function weatherFail() {
+  if (document.getElementById('temp').textContent === '--°') {
+    document.getElementById('cond').textContent = 'Clima indisponível';
+  }
+}
+
+function loadWeather() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', WEATHER_URL);
+  xhr.timeout = 15000;
+  xhr.onload = function () {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      var cw = data.current_weather;
+      document.getElementById('temp').textContent = Math.round(cw.temperature) + '°';
+      document.getElementById('cond').textContent = describe(cw.weathercode);
+      document.getElementById('range').textContent =
+        'Máx ' + Math.round(data.daily.temperature_2m_max[0]) + '°, mín ' +
+        Math.round(data.daily.temperature_2m_min[0]) + '°';
+    } catch (err) { weatherFail(); }
+  };
+  xhr.onerror = weatherFail;
+  xhr.ontimeout = weatherFail;
+  xhr.send();
+}
+loadWeather();
+setInterval(loadWeather, 30 * 60 * 1000);
+
+var hint = document.getElementById('hint');
+function say(msg) {
+  hint.textContent = msg;
+  setTimeout(function () { hint.textContent = DEFAULT_HINT; }, 4000);
+}
+
+var grid = document.getElementById('grid');
 var tiles = [];
 var current = 0;
 
@@ -125,7 +217,7 @@ for (var i = 0; i < SHORTCUTS.length; i++) {
 
   var glyph = document.createElement('div');
   glyph.className = 'glyph';
-  glyph.textContent = s.name.charAt(0);
+  glyph.textContent = s.glyph;
 
   var name = document.createElement('div');
   name.className = 'name';
@@ -133,7 +225,7 @@ for (var i = 0; i < SHORTCUTS.length; i++) {
 
   tile.appendChild(glyph);
   tile.appendChild(name);
-  row.appendChild(tile);
+  grid.appendChild(tile);
   tiles.push(tile);
 }
 
@@ -145,11 +237,43 @@ function select(index) {
 }
 select(0);
 
+function openSite(item) {
+  if (item.url) {
+    window.location.href = item.url;
+  } else {
+    say('O atalho ' + item.name + ' ainda não tem endereço configurado.');
+  }
+}
+
+function tryIds(item, n) {
+  if (n >= item.ids.length) { openSite(item); return; }
+  try {
+    tizen.application.launch(
+      item.ids[n],
+      function () {},
+      function () { tryIds(item, n + 1); }
+    );
+  } catch (err) {
+    tryIds(item, n + 1);
+  }
+}
+
+function launch(item) {
+  say('Abrindo ' + item.name + '...');
+  if (item.ids.length && typeof tizen !== 'undefined' && tizen.application) {
+    tryIds(item, 0);
+  } else {
+    openSite(item);
+  }
+}
+
 document.addEventListener('keydown', function (e) {
   var k = e.keyCode;
   if (k === 37) { select(current - 1); e.preventDefault(); }
   else if (k === 39) { select(current + 1); e.preventDefault(); }
-  else if (k === 13) { window.location.href = SHORTCUTS[current].url; e.preventDefault(); }
+  else if (k === 38) { select(current - COLS); e.preventDefault(); }
+  else if (k === 40) { select(current + COLS); e.preventDefault(); }
+  else if (k === 13) { launch(SHORTCUTS[current]); e.preventDefault(); }
 });
 </script>
 </body>
