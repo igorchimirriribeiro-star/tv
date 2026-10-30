@@ -78,6 +78,7 @@ html, body {
   color: var(--tile-color);
 }
 .tile .name { font-size: 1.8vw; font-weight: 700; }
+.tile .logo { display: block; width: 4.6vw; height: 4.6vw; }
 .tile.on {
   transform: scale(1.06);
   box-shadow: 0 0 0 0.25vw var(--accent);
@@ -205,6 +206,29 @@ function say(msg) {
   setTimeout(function () { hint.textContent = DEFAULT_HINT; }, 4000);
 }
 
+/* Logos vindos do Simple Icons (cdn.simpleicons.org). Se um logo nao carregar,
+   a sigla do atalho continua aparecendo no lugar. */
+var ICONS = {
+  'YouTube': 'youtube',
+  'Netflix': 'netflix',
+  'Disney+': 'disneyplus',
+  'Prime Video': 'primevideo',
+  'Globoplay': 'globoplay',
+  'Paramount+': 'paramountplus',
+  'HBO Max': 'hbomax',
+  'Apple TV': 'appletv'
+};
+
+function addLogo(box, item) {
+  var img = new Image();
+  img.className = 'logo';
+  img.onload = function () {
+    box.textContent = '';
+    box.appendChild(img);
+  };
+  img.src = 'https://cdn.simpleicons.org/' + ICONS[item.name] + '/' + item.color.replace('#', '');
+}
+
 var grid = document.getElementById('grid');
 var tiles = [];
 var current = 0;
@@ -218,13 +242,14 @@ for (var i = 0; i < SHORTCUTS.length; i++) {
   var glyph = document.createElement('div');
   glyph.className = 'glyph';
   glyph.textContent = s.glyph;
+  if (ICONS[s.name]) { addLogo(glyph, s); }
 
-  var name = document.createElement('div');
-  name.className = 'name';
-  name.textContent = s.name;
+  var label = document.createElement('div');
+  label.className = 'name';
+  label.textContent = s.name;
 
   tile.appendChild(glyph);
-  tile.appendChild(name);
+  tile.appendChild(label);
   grid.appendChild(tile);
   tiles.push(tile);
 }
